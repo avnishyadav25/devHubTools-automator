@@ -17,7 +17,7 @@
     "node",
     "python"
   ],
-  "author": "",
+  "author": "Avnish Yadav",
   "license": "MIT",
   "dependencies": {
     "chalk": "^4.1.2",
