@@ -6,14 +6,14 @@
 
 The **DevHubTools Automator** is a CLI tool designed to standardize project setup, enforcing best practices, and significantly reducing the time required to scaffold new services.
 
-## 🚀 Key Features
+##  Key Features
 
 *   **Multi-stack Support**: Next.js (React), Node.js (Express), Python (Flask).
 *   **Production Ready**: Includes `Dockerfile` and `ci.yml` (GitHub Actions) out of the box.
 *   **Enforced Standards**: Pre-configured ESLint, Prettier (where applicable), and .gitignore.
 *   **Interactive**: User-friendly prompts to customize your build.
 
-## 🛠️ Architecture
+##  Architecture
 
 The tool is built on a robust Node.js foundation, leveraging industry-standard libraries to ensure reliability and maintainability.
 
@@ -29,7 +29,7 @@ The data flow follows this pipeline:
     *   **Handlebars**: Renders dynamic content (names, versions) into template files.
     *   **fs-extra**: Writes the processed files to the destination directory.
 
-## 📦 Usage
+##  Usage
 
 ### Installation
 
@@ -53,7 +53,7 @@ Follow the interactive prompts:
 
 The tool will scaffold the directory structure, install dependencies (if applicable), and initialize the git repository.
 
-## ✅ Test Results & Verification
+##  Test Results & Verification
 
 We rigidly test the generator against all supported stacks. Below are the results from the latest verification run:
 
@@ -82,7 +82,7 @@ Testing Next.js generation...
 
 *Tested on macOS / Node v18+*
 
-## 📁 Directory Structure
+##  Directory Structure
 
 ```
 devhubtools-automator/
