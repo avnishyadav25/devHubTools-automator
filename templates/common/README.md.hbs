@@ -1,0 +1,25 @@
+# {{name}}
+
+{{description}}
+
+## Development
+
+Install dependencies:
+
+```bash
+{{#if isPython}}
+pip install -r requirements.txt
+{{else}}
+npm install
+{{/if}}
+```
+
+Run dev:
+
+```bash
+{{#if isPython}}
+python app.py
+{{else}}
+npm run dev
+{{/if}}
+```
