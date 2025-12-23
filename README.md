@@ -17,9 +17,17 @@ The **DevHubTools Automator** is a CLI tool designed to standardize project setu
 
 The tool is built on a robust Node.js foundation, leveraging industry-standard libraries to ensure reliability and maintainability.
 
-![Architecture Diagram](https://mermaid.ink/img/pako:eNptkMFqwzAMhl_F6NRC-wI9DLaT3WbowW6H0UOxnWQlsY3sFCyl7740baG000Q__f9I_g5aWCM0dD1o6zX5qM-OF_Q-X850uV7T9fzC1_MCY7JKeQ8eW_hI90_0en9A94_0_kH7B_A-oA8BfcwYj0l-zEm-z_nQZnyY8vE55dM8H9M8H_M8X_J8vOT5tM2LaZ4X03x-sKqlVq1SqqF2_0FrK6zWcFRbo3X0DrR1HrwF2gJthfaGtkaL4B1oC7QV2hvaGi2Cd6At0NaC94OtB9p68N7Q1mgRvIOG_wX6e6E_4v4Lh1VlaQ?type=png)
-
-> Note: If the diagram above doesn't render, here is the text description:
+```mermaid
+graph TD
+    A[Entry Point: bin/devhub] --> B(Commander.js)
+    B -->|Parse Args| C{Command?}
+    C -->|create| D(Inquirer.js)
+    D -->|Prompt User| E[User Answers]
+    E --> F(Generator Logic)
+    F -->|Load Templates| G[Handlebars]
+    G -->|Render| H[fs-extra]
+    H -->|Write| I[Project Output]
+```
 
 The data flow follows this pipeline:
 1.  **Entry Point** (`bin/devhub`): The executable that triggers the CLI.
