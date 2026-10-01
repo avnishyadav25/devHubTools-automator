@@ -1,108 +1,191 @@
 # DevHubTools Automator
 
-![DevHub CLI Screenshot](assets/screenshot.png)
+A small Node.js CLI that scaffolds a starter project for Next.js, an Express API or a Flask app from one command and
+five prompts.
 
-> **Enterprise-ready boilerplates for Next.js, Node.js, and Python in under 60 seconds.**
+<!-- demo video: TBD -->
 
-The **DevHubTools Automator** is a CLI tool designed to standardize project setup, enforcing best practices, and significantly reducing the time required to scaffold new services.
+## What it is and why
 
-##  Key Features
+Starting a new service usually means copying an old project, deleting half of it and renaming things. `devhub create
+<app-name>` replaces that with a few questions and a clean starting folder: a package or requirements file, a minimal
+app, a Dockerfile, a CI workflow file and a README with the right commands for the stack.
 
-*   **Multi-stack Support**: Next.js (React), Node.js (Express), Python (Flask).
-*   **Production Ready**: Includes `Dockerfile` and `ci.yml` (GitHub Actions) out of the box.
-*   **Enforced Standards**: Pre-configured ESLint, Prettier (where applicable), and .gitignore.
-*   **Interactive**: User-friendly prompts to customize your build.
+It is a prototype, built in December 2025. It runs entirely on your machine: no network calls, no accounts, no
+environment variables.
 
-##  Architecture
+## Features
 
-The tool is built on a robust Node.js foundation, leveraging industry-standard libraries to ensure reliability and maintainability.
+- **Three stacks**
+  - **Next.js:** Pages Router with one page; `next`, `react` and `react-dom` set to `latest`.
+  - **Node.js API:** Express 4 with helmet, cors, morgan and dotenv, plus `GET /` and `GET /health`; nodemon for
+    `npm run dev`.
+  - **Python:** Flask 3.0 with python-dotenv, plus `/` and `/health`; gunicorn listed in `requirements.txt`.
+- **Interactive prompts** (Inquirer): project type, language variant, Dockerfile, CI workflow and a short
+  description. Pressing Enter through every prompt gives a Next.js project.
+- **Stack-aware shared files** (Handlebars conditionals): a Dockerfile (`python:3.9-slim` or `node:18-alpine`), a
+  GitHub Actions-style `ci.yml`, and a README with install and run commands.
+- **`.gitignore`** for the Node.js and Python templates.
+
+## Known limitations
+
+These are open in the current code:
+
+- The Dockerfile and CI answers are not read yet: `Dockerfile` and `ci.yml` are always written.
+- The `js` / `ts` choice is not read yet: every template is JavaScript.
+- `ci.yml` is written to the project root, not `.github/workflows/`, and its YAML indentation is broken, so move and
+  fix it before relying on it. The Node job also uses `npm ci`, which needs a lockfile, and the Node template's
+  `test` script exits with an error.
+- The Next.js template has a `lint` script but no ESLint dependency or config, and no `.gitignore`.
+- Files in an existing folder with the same name are overwritten without a warning.
+- The CLI does not install dependencies or run `git init`; you do that after generation.
+- `npm test` is a placeholder; there are no automated tests yet.
+
+## Architecture
 
 ```mermaid
-graph TD
-    A[Entry Point: bin/devhub] --> B(Commander.js)
-    B -->|Parse Args| C{Command?}
-    C -->|create| D(Inquirer.js)
-    D -->|Prompt User| E[User Answers]
-    E --> F(Generator Logic)
-    F -->|Load Templates| G[Handlebars]
-    G -->|Render| H[fs-extra]
-    H -->|Write| I[Project Output]
+flowchart LR
+  A["bin/devhub"] --> B["src/index.js<br/>Commander: create &lt;app-name&gt;"]
+  B --> C["src/commands/create.js"]
+  C --> D["src/prompts/projectPrompts.js<br/>Inquirer"]
+  D -->|answers| E["src/generators/generator.js"]
+  T1[("templates/&lt;type&gt;/")] --> E
+  T2[("templates/common/")] --> E
+  E -->|".hbs: Handlebars render<br/>other files: copy"| F[("./&lt;app-name&gt;/")]
 ```
 
-The data flow follows this pipeline:
-1.  **Entry Point** (`bin/devhub`): The executable that triggers the CLI.
-2.  **Commander.js**: Parses command-line arguments (e.g., `create <app-name>`).
-3.  **Inquirer.js**: Launches interactive prompts to gather user preferences (Project Type, Docker, CI).
-4.  **Generator Logic** (`src/generators`): merging user input with templates.
-    *   **Handlebars**: Renders dynamic content (names, versions) into template files.
-    *   **fs-extra**: Writes the processed files to the destination directory.
+1. **`bin/devhub`** is the executable; it loads `src/index.js`.
+2. **Commander** parses `create <app-name>` (`src/index.js`).
+3. **Inquirer** asks the questions (`src/prompts/projectPrompts.js`) and adds `name`, `isNext`, `isNode` and
+   `isPython` to the answers.
+4. **The generator** (`src/generators/generator.js`) copies `templates/<type>/` and then `templates/common/` into
+   `./<app-name>`. Files ending in `.hbs` are rendered with Handlebars and lose the extension; other files are copied
+   with fs-extra as they are.
 
-##  Usage
+## Quick start
 
-### Installation
+Requirements: Node.js and npm. Checked on macOS with Node.js 20.20 and npm 11.17 (2026-10-01).
 
 ```bash
-git clone <repo-url>
-cd devhubtools-automator
+git clone https://github.com/avnishyadav25/devHubTools-automator.git
+cd devHubTools-automator
 npm install
-npm link # option to run globally as 'devhub'
 ```
 
-### Creating a Project
+Run it from the clone:
 
 ```bash
-npx devhub create my-new-service
+node bin/devhub create my-new-service
 ```
 
-Follow the interactive prompts:
+Or link it once to get a `devhub` command everywhere:
 
-1.  **Select Project Type**: `Node.js`, `Python`, or `Next.js`.
-2.  **Configuration**: Choose to include Docker or CI/CD workflows.
+```bash
+npm link
+devhub create my-new-service
+```
 
-The tool will scaffold the directory structure, install dependencies (if applicable), and initialize the git repository.
+The package is not published on npm. Inside the clone, `npx devhub create my-new-service` also works, but anywhere
+else `npx devhub` would download an unrelated package with the same name. The project is always created in the
+current directory.
 
-##  Test Results & Verification
-
-We rigidly test the generator against all supported stacks. Below are the results from the latest verification run:
+## Usage
 
 ```text
-Starting comprehensive verification...
+Usage: devhub [options] [command]
 
-Testing Node.js generation...
-✓ Node.js generated successfully.
-  ✓ package.json found
-  ✓ src/index.js found
-  ✓ Dockerfile found
-  ✓ CI workflow found
+DevHubTools Automator CLI
 
-Testing Python generation...
-✓ Python generated successfully.
-  ✓ requirements.txt found
-  ✓ app.py found
-  ✓ Dockerfile found
-  ✓ CI workflow found
+Options:
+  -V, --version      output the version number
+  -h, --help         display help for command
 
-Testing Next.js generation...
-✓ Next.js generated successfully.
-  ✓ Dockerfile found
-  ✓ CI workflow found
+Commands:
+  create <app-name>  Scaffold a new project
+  help [command]     display help for command
 ```
 
-*Tested on macOS / Node v18+*
+A real run (Node.js stack, all other answers left at their defaults):
 
-##  Directory Structure
-
+```text
+$ devhub create demo-node
+Scaffolding demo-node — interactive prompts starting...
+? Project type node
+? Language / Variant js
+? Include Dockerfile? Yes
+? Include CI workflow? Yes
+? Short description demo-node generated by DevHubTools
+Project demo-node created successfully.
 ```
-devhubtools-automator/
-├── bin/            # Executable entry point
+
+What each stack generates:
+
+| Stack | Files |
+|---|---|
+| `nextjs` | `package.json`, `pages/index.js`, `Dockerfile`, `ci.yml`, `README.md` |
+| `node` | `package.json`, `src/index.js`, `.gitignore`, `Dockerfile`, `ci.yml`, `README.md` |
+| `python` | `requirements.txt`, `app.py`, `.gitignore`, `Dockerfile`, `ci.yml`, `README.md` |
+
+Then install and run the generated project:
+
+```bash
+cd demo-node
+npm install
+npm start                       # Express on PORT (default 3000)
+curl localhost:3000/health      # {"status":"ok","timestamp":"..."}
+```
+
+For the Python stack: `pip install -r requirements.txt`, then `python app.py` (PORT, default 5000). For Next.js:
+`npm install`, then `npm run dev` or `npm run build`.
+
+## Environment variables
+
+The CLI reads none. The generated apps read:
+
+- `PORT`: optional, the port the Express or Flask app listens on.
+- A `.env` file, loaded through dotenv (Node.js) or python-dotenv (Python), for your own settings.
+
+## Directory structure
+
+```text
+devHubTools-automator/
+├── bin/devhub              # Executable entry point
 ├── src/
-│   ├── commands/   # Command definitions (create, etc.)
-│   ├── generators/ # Logic for file generation and templating
-│   └── prompts/    # Inquirer question definitions
-├── templates/      # Blueprint files used by generators
-│   ├── common/     # Shared files (Dockerfile, README, CI)
-│   ├── nextjs/     # Next.js specific templates
-│   ├── node/       # Node.js specific templates
-│   └── python/     # Python specific templates
-└── test/           # Verification scripts
+│   ├── index.js            # Commander program
+│   ├── commands/create.js  # The create command
+│   ├── generators/         # Template walking and rendering
+│   └── prompts/            # Inquirer questions
+├── templates/
+│   ├── common/             # Dockerfile, README and ci.yml (Handlebars)
+│   ├── nextjs/             # Next.js files
+│   ├── node/               # Express API files
+│   └── python/             # Flask files
+├── assets/screenshot.png
+└── test/run.js             # Placeholder test runner
 ```
+
+## Screenshots
+
+![Illustration of the devhub prompt flow](assets/screenshot.png)
+
+`assets/screenshot.png` is an illustration of the prompt flow, not a capture of the current output (the real output
+is the transcript under Usage).
+
+<!-- screenshot: real terminal capture TBD -->
+
+## Tests
+
+```bash
+npm test
+```
+
+This currently prints "No tests configured — placeholder test runner." The checks above (help, one run per stack,
+starting the generated Express and Flask apps, building the generated Next.js app) were done by hand on 2026-10-01.
+
+## License
+
+No license file yet. `package.json` declares MIT.
+
+## Author
+
+Built by [Avnish Yadav](https://avnishyadav.com).
